@@ -55,7 +55,6 @@ def get_batch(split):
     y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
     return x, y
 
-
 xb, yb = get_batch('train')
 print('inputs:')
 print(xb.shape)
