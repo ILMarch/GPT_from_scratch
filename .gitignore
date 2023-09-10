@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 /venv
+=======
+venv
+>>>>>>> c91fa31 (add bigram.py & .gitignore)
 .idea
 __pycache__/
 *.bin
 *.pkl
 *.pt
 *.pyc
+<<<<<<< HEAD
 input.txt
+=======
+input.txt
+>>>>>>> c91fa31 (add bigram.py & .gitignore)
