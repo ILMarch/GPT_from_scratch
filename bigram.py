@@ -36,15 +36,6 @@ n = int(0.9 * len(data))  # first 90% will be train, rest val
 train_data = data[:n]
 val_data = data[n:]
 
-block_size = 8
-train_data[:block_size + 1]
-
-x = train_data[:block_size]
-y = train_data[1:block_size + 1]
-for t in range(block_size):
-    context = x[:t + 1]
-    target = y[t]
-    print(f'when input is {context} the target: {target}')
 
 # data loading
 def get_batch(split):
@@ -55,25 +46,21 @@ def get_batch(split):
     y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
     return x, y
 
-xb, yb = get_batch('train')
-print('inputs:')
-print(xb.shape)
-print(xb)
-print('targets:')
-print(yb.shape)
-print(yb)
-
-print('----')
-
-for b in range(batch_size):  # batch dimension
-    for t in range(block_size):  # time dimension
-        context = xb[b, :t + 1]
-        target = yb[b, t]
-        print(f'when input is {context.tolist()} the target: {target}')
-
-print(xb)  # our iput to the transformer
+@torch.no_grad
+def estimate_loss():
+    out = {}
+    model.eval()
+    for split in ['train', 'val']:
+        losses = torch.zeros(eval_iters)
+        for k in range(eval_iters):
+            X, Y = get_batch(split)
+            logits, loss = model(X, Y)
+        out[split] = losses.mean()
+    model.train()
+    return out
 
 
+# super simple bigram model
 class BigramLanguageModel(nn.Module):
 
     def __init__(self, vocab_size):
@@ -112,20 +99,18 @@ class BigramLanguageModel(nn.Module):
         return idx
 
 
-m = BigramLanguageModel(vocab_size)
-logits, loss = m(xb, yb)
-print(logits.shape)
-print(loss)
-
-print(decode(m.generate(idx=torch.zeros((1, 1), dtype=torch.long), max_new_tokens=100)[0].tolist()))
+model = BigramLanguageModel(vocab_size)
+m = model.to(device)
 
 # create a PyTorch optimizer
-optimizer = torch.optim.AdamW(m.parameters(), lr=1e-3)
+optimizer = torch.optim.AdamW(m.parameters(), learning_rate)
 
-from tqdm import tqdm
+for iter in range(max_iters):
 
-batch_size = 32
-for steps in tqdm(range(1000)):  # increase number of steps for good results...
+    # every once in a while evaluate the loss on train and val sets
+    if iter % eval_interval == 0:
+        losses = estimate_loss()
+        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
     # sample a batch of data
     xb, yb = get_batch('train')
@@ -136,6 +121,6 @@ for steps in tqdm(range(1000)):  # increase number of steps for good results...
     loss.backward()
     optimizer.step()
 
-print(loss.item())
-
-print(decode(m.generate(idx=torch.zeros((1, 1), dtype=torch.long), max_new_tokens=500)[0].tolist()))
+# generate from the model
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
