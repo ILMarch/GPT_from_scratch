@@ -47,7 +47,7 @@ def get_batch(split):
     x, y = x.to(device), y.to(device)
     return x, y
 
-@torch.no_grad
+@torch.no_grad()
 def estimate_loss():
     out = {}
     model.eval()
@@ -56,6 +56,7 @@ def estimate_loss():
         for k in range(eval_iters):
             X, Y = get_batch(split)
             logits, loss = model(X, Y)
+            losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
     return out
@@ -104,7 +105,7 @@ model = BigramLanguageModel(vocab_size)
 m = model.to(device)
 
 # create a PyTorch optimizer
-optimizer = torch.optim.AdamW(m.parameters(), learning_rate)
+optimizer = torch.optim.AdamW(model.parameters(), learning_rate)
 
 for iter in range(max_iters):
 
@@ -117,7 +118,7 @@ for iter in range(max_iters):
     xb, yb = get_batch('train')
 
     # evaluate the loss
-    logits, loss = m(xb, yb)
+    logits, loss = model(xb, yb)
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
