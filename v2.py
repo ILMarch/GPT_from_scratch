@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-# hyperparameters
+# hyperparameters                                                              ## из примера, обучалось на 100 GPU)
 batch_size = 32  # how many independent sequences will we process in parallel  ## 64
 block_size = 8  # what is the maximum context length for predictions           ## 256
 max_iters = 3000                                                               ## 5000
