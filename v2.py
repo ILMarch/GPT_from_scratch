@@ -95,6 +95,19 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x):
         return torch.cat([h(x) for h in self.heads], dim=-1) # concatenate result of parallel heads
 
+class FeedForward(nn.Module):
+    """ a simple linear ayer followed by a non-linearity """
+
+    def __init__(self, n_embd):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, n_embd),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
 # super simple bigram model
 class BigramLanguageModel(nn.Module):
 
