@@ -91,9 +91,12 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
 
     def forward(self, x):
-        return torch.cat([h(x) for h in self.heads], dim=-1) # concatenate result of parallel heads
+        out = torch.cat([h(x) for h in self.heads], dim=-1) # concatenate result of parallel heads
+        out = self.proj(out)
+        return out
 
 class FeedForward(nn.Module):
     """ a simple linear ayer followed by a non-linearity """
